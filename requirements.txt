@@ -1,0 +1,6 @@
+flask
+qrcode
+tkinterdnd2
+pynput
+mss
+pillow

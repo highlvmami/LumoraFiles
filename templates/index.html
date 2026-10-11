@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LumoraFiles</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 16px; }
+    .kart { background: #1e293b; padding: 20px; border-radius: 16px; max-width: 480px; margin: 0 auto 16px; }
+    h1 { margin: 0 0 4px; text-align: center; }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    .alt { text-align: center; color: #94a3b8; margin: 0 0 16px; }
+    button, .secici { display: block; width: 100%; padding: 14px; font-size: 18px; border: 0; border-radius: 10px;
+                      background: #6366f1; color: white; text-align: center; cursor: pointer; }
+    button:disabled { opacity: .5; }
+    input[type=file] { display: none; }
+    .satir { margin-top: 12px; }
+    .ad { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; word-break: break-all; }
+    .durum { color: #94a3b8; white-space: nowrap; }
+    .cubuk { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .cubuk > div { height: 100%; width: 0; background: #6366f1; transition: width .15s; }
+    .tamam .cubuk > div { background: #22c55e; }
+    .tamam .durum { color: #4ade80; }
+    .hata .cubuk > div { background: #ef4444; }
+    .hata .durum { color: #f87171; }
+    #ozet { text-align: center; color: #94a3b8; margin-top: 12px; min-height: 1.2em; }
+    a.indir { display: flex; justify-content: space-between; gap: 8px; padding: 12px; margin-top: 8px;
+              background: #334155; border-radius: 10px; color: #e2e8f0; text-decoration: none; word-break: break-all; }
+    .bos { color: #94a3b8; text-align: center; }
+    .sekmeler { display: flex; gap: 8px; max-width: 480px; margin: 0 auto 16px; }
+    .sekmeler button { padding: 10px 4px; font-size: 15px; background: #1e293b; color: #94a3b8; }
+    .sekmeler button.aktif { background: #6366f1; color: white; }
+    .sekme { display: none; } .sekme.aktif { display: block; }
+    .izgara { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .izgara.iki { grid-template-columns: repeat(2, 1fr); }
+    .izgara.bes { grid-template-columns: repeat(5, 1fr); }
+    .izgara button { padding: 14px 4px; font-size: 15px; background: #334155; }
+    .izgara button:active { background: #6366f1; }
+    .tehlike { background: #7f1d1d !important; }
+    #pad { height: 220px; border-radius: 12px; background: #0f172a; border: 2px dashed #475569; display: flex;
+           align-items: center; justify-content: center; color: #64748b; text-align: center; touch-action: none;
+           user-select: none; -webkit-user-select: none; padding: 12px; }
+    .yazi { display: flex; gap: 8px; margin-top: 12px; }
+    .yazi input { flex: 1; min-width: 0; padding: 12px; font-size: 16px; border-radius: 10px; border: 2px solid #334155;
+                  background: #0f172a; color: #e2e8f0; }
+    .yazi button { width: auto; padding: 12px 18px; font-size: 16px; }
+    #ekranKutu img { width: 100%; border-radius: 8px; display: block; background: #000; min-height: 80px; }
+    .uyari { background: #78350f; color: #fde68a; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center; display: none; }
+    #bildirim { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #334155; color: #e2e8f0;
+                padding: 10px 16px; border-radius: 20px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; text-align: center; }
+    #bildirim.goster { opacity: 1; }
+    small { color: #94a3b8; display: block; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>✨ LumoraFiles</h1>
+  <p class="alt">Telefon ⇄ bilgisayar</p>
+
+  <div class="sekmeler">
+    <button data-sekme="dosya" class="aktif">📁 Dosya</button>
+    <button data-sekme="kumanda">🎮 Kumanda</button>
+    <button data-sekme="ekran">🖥 Ekran</button>
+  </div>
+  <div id="uyari" class="uyari"></div>
+
+  <div id="s-dosya" class="sekme aktif">
+  <div class="kart">
+    <h2>📤 Bilgisayara gönder</h2>
+    <label class="secici" for="dosyalar">Dosya seç (birden fazla olabilir)</label>
+    <input type="file" id="dosyalar" multiple>
+    <button id="gonder" class="satir" disabled>Gönder</button>
+    <div id="liste"></div>
+    <div id="ozet"></div>
+  </div>
+
+  <div class="kart">
+    <h2>📥 Bilgisayardan gelenler</h2>
+    <div id="indirilenler"><p class="bos">Henüz paylaşılan dosya yok</p></div>
+  </div>
+  </div>
+
+  <div id="s-kumanda" class="sekme">
+    <div class="kart">
+      <h2>🎵 Medya ve ses</h2>
+      <div class="izgara">
+        <button data-medya="onceki">⏮ Önceki</button>
+        <button data-medya="oynat">⏯ Oynat</button>
+        <button data-medya="sonraki">⏭ Sonraki</button>
+        <button data-medya="ses_azalt">🔉 Ses −</button>
+        <button data-medya="sessiz">🔇 Sessiz</button>
+        <button data-medya="ses_art">🔊 Ses +</button>
+      </div>
+    </div>
+
+    <div class="kart">
+      <h2>📽 Sunum</h2>
+      <div class="izgara iki">
+        <button data-sunum="geri">◀ Geri</button>
+        <button data-sunum="ileri">İleri ▶</button>
+      </div>
+      <div class="izgara" style="margin-top:8px">
+        <button data-sunum="baslat">▶ Başlat (F5)</button>
+        <button data-sunum="karart">⬛ Karart</button>
+        <button data-sunum="bitir">✖ Bitir</button>
+      </div>
+    </div>
+
+    <div class="kart">
+      <h2>🖱 Fare ve klavye</h2>
+      <div id="pad">Parmağını burada kaydır<br>Dokun: sol tık · İki parmakla dokun: sağ tık<br>İki parmakla kaydır: sayfayı kaydır</div>
+      <div class="izgara iki" style="margin-top:8px">
+        <button data-tik="sol">Sol tık</button>
+        <button data-tik="sag">Sağ tık</button>
+      </div>
+      <div class="yazi">
+        <input id="yazilacak" placeholder="Bilgisayara yazılacak metin" autocomplete="off">
+        <button id="yazGonder">Yaz</button>
+      </div>
+      <div class="izgara bes" style="margin-top:8px">
+        <button data-tus="backspace">⌫</button>
+        <button data-tus="up">↑</button>
+        <button data-tus="enter">⏎</button>
+        <button data-tus="tab">⇥</button>
+        <button data-tus="esc">Esc</button>
+        <button data-tus="left">←</button>
+        <button data-tus="down">↓</button>
+        <button data-tus="right">→</button>
+        <button data-tus="space">␣</button>
+        <button data-tus="delete">Del</button>
+      </div>
+    </div>
+
+    <div class="kart">
+      <h2>⚙️ Bilgisayar</h2>
+      <div class="izgara iki">
+        <button data-sistem="kilitle">🔒 Kilitle</button>
+        <button data-sistem="uyut">🌙 Uyut</button>
+        <button data-sistem="yeniden_baslat" class="tehlike" data-onay="Bilgisayar 30 saniye sonra yeniden başlasın mı?">🔄 Yeniden başlat</button>
+        <button data-sistem="kapat" class="tehlike" data-onay="Bilgisayar 30 saniye sonra kapansın mı?">⏻ Kapat</button>
+      </div>
+      <button data-sistem="iptal" style="margin-top:8px;background:#334155;font-size:15px;padding:12px">Kapatmayı iptal et</button>
+      <h2 style="margin-top:16px">🚀 Programlar</h2>
+      <div id="programlar" class="izgara iki"></div>
+      <small>Programlar listesini bilgisayardaki <b>komutlar.json</b> dosyasından değiştirebilirsin.</small>
+    </div>
+  </div>
+
+  <div id="s-ekran" class="sekme">
+    <div class="kart" id="ekranKutu">
+      <h2>🖥 Bilgisayar ekranı</h2>
+      <img id="ekranImg" alt="Ekran yükleniyor…">
+      <small>Ekrana dokunursan bilgisayarda o noktaya tıklanır.</small>
+    </div>
+  </div>
+
+  <div id="bildirim"></div>
+
+<script>
+const girdi = document.getElementById("dosyalar");
+const gonder = document.getElementById("gonder");
+const liste = document.getElementById("liste");
+const ozet = document.getElementById("ozet");
+
+function boyutYaz(b) {
+  if (b < 1024) return b + " B";
+  if (b < 1048576) return (b / 1024).toFixed(0) + " KB";
+  if (b < 1073741824) return (b / 1048576).toFixed(1) + " MB";
+  return (b / 1073741824).toFixed(2) + " GB";
+}
+
+function metin(ust, ad, sag) {
+  const d = document.createElement("div");
+  d.className = "ad";
+  const a = document.createElement("span"); a.textContent = ad;
+  const b = document.createElement("span"); b.className = "durum"; b.textContent = sag;
+  d.append(a, b);
+  ust.append(d);
+  return b;
+}
+
+girdi.addEventListener("change", () => {
+  liste.innerHTML = "";
+  ozet.textContent = "";
+  gonder.disabled = girdi.files.length === 0;
+  if (girdi.files.length) ozet.textContent = girdi.files.length + " dosya seçildi";
+});
+
+// Tek dosyayı XMLHttpRequest ile yollar. fetch yükleme ilerlemesini vermez,
+// XHR'ın upload.onprogress olayı verir; çubuk bu yüzden XHR ile çalışır.
+function yukle(dosya, satir, durum, cubuk) {
+  return new Promise(bitti => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/yukle");
+    xhr.upload.onprogress = e => {
+      if (!e.lengthComputable) return;
+      const yuzde = Math.round(e.loaded / e.total * 100);
+      cubuk.style.width = yuzde + "%";
+      durum.textContent = "%" + yuzde;
+    };
+    xhr.onload = () => {
+      if (xhr.status === 401) { location.href = "/giris"; return; }
+      const ok = xhr.status === 200;
+      satir.classList.add(ok ? "tamam" : "hata");
+      cubuk.style.width = "100%";
+      durum.textContent = ok ? "✓ Gönderildi" : "Hata";
+      bitti(ok);
+    };
+    xhr.onerror = () => {
+      satir.classList.add("hata");
+      durum.textContent = "Bağlantı koptu";
+      bitti(false);
+    };
+    const f = new FormData();
+    f.append("dosya", dosya);
+    xhr.send(f);
+  });
+}
+
+gonder.addEventListener("click", async () => {
+  const dosyalar = Array.from(girdi.files);
+  gonder.disabled = true;
+  liste.innerHTML = "";
+  let basarili = 0;
+  for (let i = 0; i < dosyalar.length; i++) {
+    const d = dosyalar[i];
+    ozet.textContent = "Gönderiliyor: " + (i + 1) + " / " + dosyalar.length;
+    const satir = document.createElement("div");
+    satir.className = "satir";
+    const durum = metin(satir, d.name + " (" + boyutYaz(d.size) + ")", "Bekliyor");
+    const cubuk = document.createElement("div");
+    const kutu = document.createElement("div");
+    kutu.className = "cubuk"; kutu.append(cubuk);
+    satir.append(kutu);
+    liste.append(satir);
+    if (await yukle(d, satir, durum, cubuk)) basarili++;
+  }
+  ozet.textContent = basarili === dosyalar.length
+    ? "✅ " + basarili + " dosya gönderildi"
+    : "⚠️ " + basarili + " / " + dosyalar.length + " dosya gönderilebildi";
+  girdi.value = "";
+});
+
+// Bilgisayardan telefona: her 3 saniyede paylaşılan dosyaları sor.
+const kutu = document.getElementById("indirilenler");
+let sonImza = "";
+async function paylasilanlariYenile() {
+  try {
+    const yanit = await fetch("/liste");
+    if (yanit.status === 401) { location.href = "/giris"; return; }
+    const dosyalar = await yanit.json();
+    const imza = JSON.stringify(dosyalar);
+    if (imza === sonImza) return;
+    sonImza = imza;
+    kutu.innerHTML = "";
+    if (!dosyalar.length) {
+      kutu.innerHTML = '<p class="bos">Henüz paylaşılan dosya yok</p>';
+      return;
+    }
+    for (const d of dosyalar) {
+      const a = document.createElement("a");
+      a.className = "indir";
+      a.href = "/indir/" + encodeURIComponent(d.ad);
+      const ad = document.createElement("span"); ad.textContent = d.ad;
+      const bt = document.createElement("span"); bt.className = "durum"; bt.textContent = boyutYaz(d.boyut) + " ⬇";
+      a.append(ad, bt);
+      kutu.append(a);
+    }
+  } catch (e) { /* bağlantı yoksa bir sonraki turda tekrar dene */ }
+}
+paylasilanlariYenile();
+setInterval(paylasilanlariYenile, 3000);
+
+// ---------------- Sekmeler ----------------
+let aktifSekme = "dosya";
+document.querySelectorAll(".sekmeler button").forEach(b => b.addEventListener("click", () => {
+  aktifSekme = b.dataset.sekme;
+  document.querySelectorAll(".sekmeler button").forEach(x => x.classList.toggle("aktif", x === b));
+  document.querySelectorAll(".sekme").forEach(x => x.classList.toggle("aktif", x.id === "s-" + aktifSekme));
+  if (aktifSekme === "ekran") ekranBaslat();
+  if (aktifSekme !== "dosya") bilgiYenile();
+}));
+
+// ---------------- Uzaktan kontrol ----------------
+const bildirim = document.getElementById("bildirim");
+let bildirimZaman;
+function haber(metin) {
+  bildirim.textContent = metin;
+  bildirim.classList.add("goster");
+  clearTimeout(bildirimZaman);
+  bildirimZaman = setTimeout(() => bildirim.classList.remove("goster"), 2200);
+}
+
+async function uzak(yol, veri) {
+  try {
+    const y = await fetch("/uzak/" + yol, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(veri || {}), keepalive: true,
+    });
+    if (y.status === 401) { location.href = "/giris"; return false; }
+    if (!y.ok) {
+      const j = await y.json().catch(() => ({}));
+      haber(j.hata || "İşlem yapılamadı");
+      if (y.status === 403) bilgiYenile();
+      return false;
+    }
+    return true;
+  } catch (e) { haber("Bağlantı yok"); return false; }
+}
+
+const uyari = document.getElementById("uyari");
+async function bilgiYenile() {
+  try {
+    const y = await fetch("/uzak/bilgi");
+    if (y.status === 401) { location.href = "/giris"; return; }
+    if (y.status === 403) {
+      uyari.textContent = "Bilgisayarda uzaktan kontrol kapalı. Pencereden \"Uzaktan kontrole izin ver\" kutusunu işaretle.";
+      uyari.style.display = "block";
+      return;
+    }
+    uyari.style.display = "none";
+    const b = await y.json();
+    const kutu = document.getElementById("programlar");
+    kutu.innerHTML = "";
+    b.komutlar.forEach((ad, sira) => {
+      const d = document.createElement("button");
+      d.textContent = ad;
+      d.addEventListener("click", () => uzak("komut", {sira}).then(ok => ok && haber(ad + " açılıyor")));
+      kutu.append(d);
+    });
+  } catch (e) {}
+}
+
+document.querySelectorAll("[data-medya]").forEach(b => b.addEventListener("click", () => uzak("medya", {eylem: b.dataset.medya})));
+document.querySelectorAll("[data-sunum]").forEach(b => b.addEventListener("click", () => uzak("sunum", {eylem: b.dataset.sunum})));
+document.querySelectorAll("[data-tik]").forEach(b => b.addEventListener("click", () => uzak("tik", {dugme: b.dataset.tik})));
+document.querySelectorAll("[data-tus]").forEach(b => b.addEventListener("click", () => uzak("tus", {tus: b.dataset.tus})));
+document.querySelectorAll("[data-sistem]").forEach(b => b.addEventListener("click", async () => {
+  if (b.dataset.onay && !confirm(b.dataset.onay)) return;
+  if (await uzak("komut", {sistem: b.dataset.sistem})) haber("Komut gönderildi");
+}));
+
+const yazilacak = document.getElementById("yazilacak");
+async function yazGonder() {
+  const metin = yazilacak.value;
+  if (!metin) return;
+  if (await uzak("yaz", {metin})) { yazilacak.value = ""; haber("Yazıldı"); }
+}
+document.getElementById("yazGonder").addEventListener("click", yazGonder);
+yazilacak.addEventListener("keydown", e => { if (e.key === "Enter") yazGonder(); });
+
+// Dokunmatik yüzey: tek parmak = fare, iki parmak = kaydırma.
+// Sunucuya her harekette değil, 30 ms'de bir toplu gönderiyoruz.
+const pad = document.getElementById("pad");
+const HIZ = 1.8, KAYDIRMA = 0.12;
+let bekDx = 0, bekDy = 0, bekKay = 0;
+let son = null, basla = 0, yol = 0, enFazlaParmak = 0;
+
+function merkez(t) {
+  let x = 0, y = 0;
+  for (const p of t) { x += p.clientX; y += p.clientY; }
+  return {x: x / t.length, y: y / t.length};
+}
+pad.addEventListener("touchstart", e => {
+  e.preventDefault();
+  if (e.touches.length === 1) { basla = Date.now(); yol = 0; enFazlaParmak = 1; }
+  enFazlaParmak = Math.max(enFazlaParmak, e.touches.length);
+  son = merkez(e.touches);
+}, {passive: false});
+pad.addEventListener("touchmove", e => {
+  e.preventDefault();
+  const m = merkez(e.touches);
+  const dx = m.x - son.x, dy = m.y - son.y;
+  son = m;
+  yol += Math.abs(dx) + Math.abs(dy);
+  if (e.touches.length >= 2) bekKay += dy * KAYDIRMA;
+  else { bekDx += dx * HIZ; bekDy += dy * HIZ; }
+}, {passive: false});
+pad.addEventListener("touchend", e => {
+  e.preventDefault();
+  if (e.touches.length > 0) { son = merkez(e.touches); return; }
+  if (Date.now() - basla < 280 && yol < 10) {
+    uzak("tik", {dugme: enFazlaParmak >= 2 ? "sag" : "sol"});
+  }
+}, {passive: false});
+
+setInterval(() => {
+  const dx = Math.trunc(bekDx), dy = Math.trunc(bekDy), k = Math.trunc(bekKay);
+  if (dx || dy) { bekDx -= dx; bekDy -= dy; uzak("fare", {dx, dy}); }
+  if (k) { bekKay -= k; uzak("kaydir", {dy: k}); }
+}, 30);
+
+// Ekran izleme: bir kare inince bir sonrakini iste (ağ ne kadar hızlıysa o kadar akıcı).
+// Kareyi önce belleğe (blob) indirip sonra yerine koyuyoruz; böylece görüntü
+// kareler arasında yanıp sönmez.
+let ekranCalisiyor = false;
+const ekranImg = document.getElementById("ekranImg");
+const bekle = ms => new Promise(r => setTimeout(r, ms));
+async function ekranBaslat() {
+  if (ekranCalisiyor) return;
+  ekranCalisiyor = true;
+  while (aktifSekme === "ekran") {
+    try {
+      const y = await fetch("/uzak/ekran.jpg?t=" + Date.now());
+      if (y.status === 401) { location.href = "/giris"; break; }
+      if (y.status === 403) { bilgiYenile(); await bekle(2000); continue; }
+      if (!y.ok) { await bekle(1500); continue; }
+      const yeni = URL.createObjectURL(await y.blob());
+      const eski = ekranImg.src;
+      ekranImg.src = yeni;
+      await ekranImg.decode().catch(() => {});
+      if (eski.startsWith("blob:")) URL.revokeObjectURL(eski);
+    } catch (e) { await bekle(1500); }
+  }
+  ekranCalisiyor = false;
+}
+ekranImg.addEventListener("click", e => {
+  const r = ekranImg.getBoundingClientRect();
+  uzak("tikla_mutlak", {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height});
+});
+</script>
+</body>
+</html>
